@@ -1,0 +1,53 @@
+gvcall
+by jwc < http://jwcxz.com >
+
+(note that this project has obsolete dependencies)
+
+INTRODUCTION
+
+    gvcall is a simple utility to make a phone call with Google Voice from the
+    command line.  The major feature of this program is to integrate Google
+    Voice and Linphone's command-line mode to make calling a number easy.
+
+
+SETUP
+
+    0. If you don't already have a way to receive incoming calls to a VoIP
+       account, see these instructions on my blog:
+
+            http://blog.jwcxz.com/?p=599
+
+       I use Antisip and IPKALL to achieve this.
+
+    1. Setup Linphone with your SIP server information (again, see the link
+       above for more detailed instructions).
+
+    2. Get pygooglevoice at:
+
+            http://code.google.com/p/pygooglevoice/
+            AUR Package: http://aur.archlinux.org/packages.php?ID=38993
+
+    3. Install gvcall wherever you want and run it with no arguments.  This
+       will create a default configuration file at ~/.gvcall
+
+    4. Edit ~/.gvcall using the instructions provided in the comments.
+
+    5. Run gvcall -h for a list of options, or to get started right away, just
+       do gvcall phonenumber
+
+
+NOTES
+    Other Functionality
+        You can also add other phone numbers to call with using a simple alias
+        system in ~/.gvcall.  For example, say that you sometimes have your
+        mobile phone next to you and want to call a number using that.  You
+        could set altnums to be 
+
+            altnums=mobile:5555555555
+
+        and then run gvcal -m mobile phonenumber
+
+    Passwordless Access
+        pygooglevoice provides a configuration file at ~/.gvoice where you can
+        enter your Google username and password if you don't want to be
+        prompted every time you want to make a call.

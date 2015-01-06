@@ -1,0 +1,97 @@
+#!/usr/bin/env python
+
+# gvcall - make a call with Google Voice (optionally with VoIP and linphone) from the commandline
+# jwc < http://jwcxz.com >
+
+import ConfigParser as cp, googlevoice, optparse, os, sys
+
+GVCONF="~/.gvcall";
+GVCONF_DEF="""[settings]
+; your VoIP number
+voipnum=5555555555
+; string containing alternate (non-VoIP) nums
+; format: 'alias0:num0|alias1:num1|...'
+altnums=5555555555
+; default command to run
+linphonecmd=linphonec -a
+"""
+
+def main():
+	# pretty simple, really:
+	#   step 1: make a call with Google Voice
+	#   step 2: invoke linphone with automatic answering
+	#			(but only if we're calling with the default number)
+
+	p = optparse.OptionParser("""gvcall - make a call with Google Voice (optionally with VoIP and linphone) from the commandline
+	usage: gvcall [options] number""");
+	p.add_option("-c", "--config",
+			dest="config",
+			action="store",
+			help="custom config file (defaults to %s)" % GVCONF,
+			default=None);
+	p.add_option("-m", "--my-phone",
+			dest="phonealias",
+			action="store",
+			help="use an alternate, non-VoIP number specified in gvcall config",
+			default=None);
+	p.add_option("-l", "--linphone-cmd",
+			dest="linphonecmd",
+			action="store",
+			help="use custom linphone command (defaults to specification in gvcall config [linphonec -a originally])",
+			default=None);
+
+	o, a = p.parse_args();
+
+	if o.config != None:
+		cfg = os.path.expanduser(o.config)
+	else:
+		cfg = os.path.expanduser(GVCONF);
+		if not os.path.exists(cfg):
+			print "ERR: ~/.gvcall dones't exist -- creating template"
+			f = open(cfg, 'w');
+			f.write(GVCONF_DEF)
+			f.close();
+			sys.exit(1);
+
+	c = cp.ConfigParser();
+	c.read(cfg);
+	s = {};
+	filter( s.update , map( lambda x : {x[0]: x[1].strip('"')} , c.items('settings') ) );
+
+	if len(a) != 1:
+		print "ERR: invalid arg syntax"
+		sys.exit(1);
+
+
+	if o.phonealias != None:
+		num = None;
+		_ = s['altnums'].split('|');
+		for __ in _:
+			__ = __.split(':');
+			if __[0] == o.phonealias:
+				num = __[1];
+		if num == None:
+			print "ERR: alternate phone number with specified alias doesn't exist";
+			sys.exit(1);
+	else:
+		num = s['voipnum']
+
+	# login to Google Voice
+	print "calling %s" % a[0];
+	voice = googlevoice.Voice();
+	voice.login();
+	voice.call(a[0], num);
+	
+	if o.phonealias == None:
+		# now that we've made the call, start up linphone
+
+		if o.linphonecmd != None:
+			linphonecmd = o.linphonecmd;
+		else:
+			linphonecmd = s['linphonecmd'];
+
+		print "running %s" % linphonecmd;
+		os.system(linphonecmd);
+
+if __name__ == "__main__":
+	main();
